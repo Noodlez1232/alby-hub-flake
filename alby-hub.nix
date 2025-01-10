@@ -1,5 +1,6 @@
 {
   albyHubSrc,
+  albyHubUI,
   autoPatchelfHook,
   buildGoModule,
   callPackage,
@@ -14,17 +15,14 @@
 buildGoModule {
   pname = "alby-hub";
   inherit version;
-  src = let
-    albyHubUI = callPackage ./frontend.nix {inherit albyHubSrc version;};
-  in
-    runCommand "albyHubBackendSrc" {} ''
-      mkdir $out
-      cp -rT ${albyHubSrc} $out
-      chmod -R +rw $out
-      # add frontend drv output to src
-      cp -r ${albyHubUI}/dist $out/frontend/dist
-    '';
-  vendorHash = "sha256-fHEDJ2M2uLMDrKisD/hhN5Bbfi+v7GBMMBJoXtybwIw=";
+  src = runCommand "albyHubBackendSrc" {} ''
+    mkdir $out
+    cp -rT ${albyHubSrc} $out
+    chmod -R +rw $out
+    # add frontend drv output to src
+    cp -r ${albyHubUI}/dist $out/frontend/dist
+  '';
+  vendorHash = "sha256-rfZ6CV16T2qfwCJOi9OLh5el0o9IKVtuer8sj++XFqI=";
   proxyVendor = true;
   nativeBuildInputs = [autoPatchelfHook];
   ldFlags = ["-X 'github.com/getAlby/hub/version.Tag=${version}'"];
@@ -46,4 +44,5 @@ buildGoModule {
     mv $out/bin/http $out/bin/alby-hub
     patchelf --shrink-rpath --allowed-rpath-prefixes /nix/store $out/bin/alby-hub
   '';
+  meta.mainProgram = "alby-hub";
 }

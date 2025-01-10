@@ -1,5 +1,6 @@
 {
   albyHubSrc,
+  albyHubUI,
   autoPatchelfHook,
   buildGoModule,
   callPackage,
@@ -20,10 +21,6 @@
   yarn,
   ...
 }: let
-  offlineCache = fetchYarnDeps {
-    yarnLock = "${albyHubSrc}/frontend/yarn.lock";
-    hash = "sha256-QFhIpJkd426c3GaDSpI36CxlNGVKQoSN8wDgAVh9Ee4=";
-  };
   deps = stdenv.mkDerivation {
     pname = "alby-hub-deps";
     inherit version;
@@ -47,26 +44,20 @@
     '';
     outputHashMode = "recursive";
     outputHashAlgo = "sha256";
-    outputHash = "sha256-/fOx3i+kb8reloVF3ZfHoKRiochKg4jIBbe7MYDOr00=";
+    outputHash = "sha256-k4kfptr3aMggFfYuwjuKO7BbSvhasIHkO6VdaWaZUfU=";
     dontFixup = true;
   };
 in
   stdenv.mkDerivation {
     pname = "alby-hub";
     inherit version;
-    src = let
-      albyHubUI = callPackage ./frontend.nix {
-        inherit albyHubSrc version;
-        buildWails = true;
-      };
-    in
-      runCommand "albyHubBackendSrc" {} ''
-        mkdir $out
-        cp -rT ${albyHubSrc} $out
-        chmod -R +rw $out
-        # add frontend drv output to src
-        cp -r ${albyHubUI}/dist $out/frontend/dist
-      '';
+    src = runCommand "albyHubBackendSrc" {} ''
+      mkdir $out
+      cp -rT ${albyHubSrc} $out
+      chmod -R +rw $out
+      # add frontend drv output to src
+      cp -r ${albyHubUI}/dist $out/frontend/dist
+    '';
     nativeBuildInputs = [autoPatchelfHook wails nodejs yarn fixup-yarn-lock];
     buildInputs = [
       go
@@ -98,8 +89,8 @@ in
 
       # install frontend deps (needs to run after bindings exist)
       pushd frontend
-      yarn config --offline set yarn-offline-mirror ${offlineCache}
-      cp "${offlineCache}/yarn.lock" .
+      yarn config --offline set yarn-offline-mirror ${albyHubUI.offlineCache}
+      cp "${albyHubUI.offlineCache}/yarn.lock" .
       fixup-yarn-lock yarn.lock
       yarn install --offline --frozen-lockfile --ignore-platform --ignore-scripts --no-progress --non-interactive
       # make node_modules binaries usable and accessible
@@ -130,4 +121,5 @@ in
       cp -rT . $out/lib
       popd
     '';
+    meta.mainProgram = "alby-hub";
   }

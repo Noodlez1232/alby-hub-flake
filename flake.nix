@@ -8,7 +8,7 @@
     supportedSystems = ["x86_64-linux" "aarch64-linux"];
     pkgsBySystem = nixpkgs.lib.getAttrs supportedSystems nixpkgs.legacyPackages;
     forAllPkgs = fn: nixpkgs.lib.mapAttrs (system: pkgs: (fn pkgs)) pkgsBySystem;
-    version = "1.12.0";
+    version = "1.13.0";
   in {
     formatter = forAllPkgs (pkgs: pkgs.alejandra);
     packages = forAllPkgs (pkgs: {
@@ -16,7 +16,7 @@
         owner = "getAlby";
         repo = "hub";
         rev = "v${version}";
-        hash = "sha256-m3ImIz9qQVFZAjZPuVFkGANhWFIJp0uGDknfhouHHBo=";
+        hash = "sha256-9ii11DHjcJtKfpYLeBn+ZjsChKq0ogRrxwCBeABQvBI=";
       };
       albyHubUI = pkgs.callPackage ./frontend.nix {
         inherit version;
@@ -25,10 +25,12 @@
       albyHub = pkgs.callPackage ./alby-hub.nix {
         inherit version;
         inherit (self.packages.${pkgs.system}) albyHubSrc;
+        inherit (self.packages.${pkgs.system}) albyHubUI;
       };
       wails = pkgs.callPackage ./wails.nix {
         inherit version;
         inherit (self.packages.${pkgs.system}) albyHubSrc;
+        inherit (self.packages.${pkgs.system}) albyHubUI;
       };
       default = self.packages.${pkgs.system}.albyHub;
     });

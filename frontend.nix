@@ -35,4 +35,7 @@ in
       mkdir -p $out
       mv dist $out
     '';
+    passthru = {
+      inherit offlineCache;
+    };
   }
